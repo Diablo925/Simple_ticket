@@ -1,0 +1,116 @@
+<div class="zmodule_content panel" id="zmodule_header_<@ ModuleName @>">
+    <div class="panel-heading">
+        <img src="<@ ModuleIcon @>" width="35" height="35" border="0" alt="<@ ModuleName @>">
+
+        <div class="zmodule_title">
+            <@ ModuleName @>
+        </div>
+
+        <div class="zmodule_desc" id="zmodule_desc_<@ ModuleName @>"><@ ModuleDesc @></div>
+
+    </div>
+	
+	<@ Result @>
+
+	<form action="./?module=Simple_ticket&action=select" method="post">
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inMyTicket" id="inMyTicket" value="inMyTicket"><: My Ticket :></button>
+	<button class="button-loader btn btn-primary" type="submit" id="button" name="inNewTicket" id="inNewTicket" value="inNewTicket"><: New ticket :></button>
+	<@ CSFR_Tag @>
+	</form>
+	
+    <div class="zform_wrapper">
+        <h2><: Simple ticket :></h2>
+		
+		<% if isMyTicket %>
+		<form action="./?module=Simple_ticket&action=read" method="post">
+		<table class="table table-striped">
+		<tr>
+		<th><: Ticket number :></th>
+		<th><: Subject :></th>
+		<th><: Domain :></th>
+		<th><: Date :></th>
+		<th><: Status :></th>
+		<th> </th>
+		</tr>
+		<% loop TicketList %>
+		<tr>
+		<td><& ticketnumber &></td>
+		<td><& ticketsubject &></td>
+		<td><& ticketdomain &></td>
+		<td><& ticketdate &></td>
+		<td><& ticketstatus &></td>
+		<td><input type="hidden" value="<& ticketnumber &>" name="innumber"><button class="button-loader btn btn-primary" type="submit" name="inRead" id="inRead" value="inRead"><: Read :></button></td>
+		</tr>
+		<% endloop %>
+		</table>
+			<@ CSFR_Tag @>
+		</form>
+		<% endif %>
+		
+		<% if isread %>
+		<form action="./?module=Simple_ticket&action=send" method="post">
+            <table class="table table-striped">
+			<% loop Ticket %>
+			<tr>
+                    <th><: Ticket number :>:</th>
+                    <td>
+                        <& Ticket_number &>
+                    </td>
+                </tr>
+				<tr>
+                    <th><: Domain :>:</th>
+                    <td>
+                        <& Ticket_domain &>
+                    </td>
+                </tr>
+				<tr>
+					<th><: Subject :>:</th>
+					<td><& Ticket_subject &></td>
+                <tr>
+                    <th><: Your message :>:</th>
+                    <td><& Ticket_msg &></td>
+                </tr>
+				<tr>
+                    <th><: Answers :>:</th>
+                    <td><& Ticket_answers &></td>
+                </tr>
+				<% endif %>
+            </table>
+				<@ CSFR_Tag @>
+        </form>
+		<% endif %>
+		
+		
+		<% if isNewTicket %>
+        <form action="./?module=Simple_ticket&action=send" method="post">
+            <table class="table table-striped">
+				<tr>
+                    <th><: Select Domain :>:</th>
+                    <td>
+                        <select name="inDomain" id="inDomain">
+                            <% loop DomainList %>
+                            <option value="<& dname &>"><& dname &></option>
+                            <% endloop %>
+                        </select>
+                    </td>
+                </tr>
+				<tr>
+					<th><: Subject :>:</th>
+					<td><input type="text" name="inSubject" id="inSubject" value="" /></td>
+                <tr>
+                    <th><: message :>:</th>
+                    <td><textarea name="inMessage" id="inMessage" rows="3" cols="80" /></textarea></td>
+                </tr>
+                <tr>
+                    <th colspan="2" align="right">
+                        <button class="button-loader add-row btn btn-primary" type="submit" ><: Make ticket :></button>
+                    </th>
+                </tr>
+            </table>
+				<@ CSFR_Tag @>
+        </form>
+		<% endif %>
+		
+    </div>
+
+</div>
