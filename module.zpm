@@ -28,7 +28,6 @@
 		<th><: Ticket number :></th>
 		<th><: Subject :></th>
 		<th><: Domain :></th>
-		<th><: Date :></th>
 		<th><: Status :></th>
 		<th> </th>
 		</tr>
@@ -37,7 +36,6 @@
 		<td><& ticketnumber &></td>
 		<td><& ticketsubject &></td>
 		<td><& ticketdomain &></td>
-		<td><& ticketdate &></td>
 		<td><& ticketstatus &></td>
 		<td><input type="hidden" value="<& ticketnumber &>" name="innumber"><button class="button-loader btn btn-primary" type="submit" name="inRead" id="inRead" value="inRead"><: Read :></button></td>
 		</tr>
@@ -82,7 +80,7 @@
 		
 		
 		<% if isNewTicket %>
-        <form action="./?module=Simple_ticket&action=send" method="post">
+        <form action="./?module=Simple_ticket&action=SendTicket" method="post">
             <table class="table table-striped">
 				<tr>
                     <th><: Select Domain :>:</th>
@@ -98,12 +96,12 @@
 					<th><: Subject :>:</th>
 					<td><input type="text" name="inSubject" id="inSubject" value="" /></td>
                 <tr>
-                    <th><: message :>:</th>
+                    <th><: Message :>:</th>
                     <td><textarea name="inMessage" id="inMessage" rows="3" cols="80" /></textarea></td>
                 </tr>
                 <tr>
                     <th colspan="2" align="right">
-                        <button class="button-loader add-row btn btn-primary" type="submit" ><: Make ticket :></button>
+                        <button class="button-loader add-row btn btn-primary" type="submit" name="inSave" id="button"><: Make ticket :></button>
                     </th>
                 </tr>
             </table>

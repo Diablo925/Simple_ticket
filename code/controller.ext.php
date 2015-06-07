@@ -23,6 +23,36 @@ class module_controller extends ctrl_module
 			 return true;
 	}
 	
+	static function ExectuteSendTicket($domain, $subject, $msg)
+	{
+		
+		global $zdbh;
+		global $controller;
+		$length = 4;
+		$ticketnumber = fs_director::GenerateRandomPassword($length, 4);
+		$date = date("Y-m-d");
+		$ticketid = "$date.$ticketnumber"; 
+		$Ticketstatus = "Open";
+		$currentuser = ctrl_users::GetUserDetail();
+		
+		$sql = "SELECT * FROM x_accounts WHERE ac_id_pk = :uid";
+		$sql = $zdbh->prepare($sql);
+        $sql->bindParam(':uid', $currentuser['userid']);
+		$sql->execute();
+        while ($row = $sql->fetch()) { $reseller = $row["ac_reseller_fk"]; }
+		$sql = $zdbh->prepare("INSERT INTO x_ticket (st_acc, st_number, st_domain, st_subject, st_meassge, st_status, st_groupid) VALUES (:uid, :number, :domain, :subject, :msg, :ticketstatus, :group)");
+		$sql->bindParam(':uid', $currentuser['userid']);
+		$sql->bindParam(':number', $ticketid);
+		$sql->bindParam(':domain', $domain);
+		$sql->bindParam(':subject', $subject);
+		$sql->bindParam(':msg', $msg);
+		$sql->bindParam(':ticketstatus', $Ticketstatus);
+		$sql->bindParam(':group', $reseller);
+        $sql->execute();
+        self::$ok = true;
+		return true;
+	}
+	
 	static function doselect()
     {
         global $controller;
@@ -69,7 +99,7 @@ class module_controller extends ctrl_module
 		$currentuser = ctrl_users::GetUserDetail();
 		$urlvars = $controller->GetAllControllerRequests('URL');
 		$ticket = $urlvars['ticket'];
-		$sql = "SELECT * FROM x_ticket WHERE st_acc_id = :uid AND st_number = :number";
+		$sql = "SELECT * FROM x_ticket WHERE st_acc = :uid AND st_number = :number";
         $numrows = $zdbh->prepare($sql);
         $numrows->bindParam(':uid', $currentuser['userid']);
 		$numrows->bindParam(':number', $ticket);
@@ -119,7 +149,7 @@ class module_controller extends ctrl_module
 		global $zdbh;
 		global $controller;
 		$currentuser = ctrl_users::GetUserDetail();
-		$sql = "SELECT * FROM x_ticket WHERE st_acc_id = :uid";
+		$sql = "SELECT * FROM x_ticket WHERE st_acc = :uid";
         $numrows = $zdbh->prepare($sql);
         $numrows->bindParam(':uid', $currentuser['userid']);
         $numrows->execute();
@@ -129,7 +159,7 @@ class module_controller extends ctrl_module
             $res = array();
             $sql->execute();
             while ($row = $sql->fetch()) {
-                array_push($res, array('ticketid' => $row['st_id'], 'ticketnumber' => $row['st_number'], 'ticketdomain' => $row['st_domain'], 'ticketsubject' => $row['st_subject'], 'ticketdate' => $row['st_ticketdate'], 'ticketstatus' => $row['st_ticketstatus']));
+                array_push($res, array('ticketid' => $row['st_id'], 'ticketnumber' => $row['st_number'], 'ticketdomain' => $row['st_domain'], 'ticketsubject' => $row['st_subject'], 'ticketstatus' => $row['st_status']));
             }
             return $res;
         } else {
@@ -166,18 +196,18 @@ class module_controller extends ctrl_module
         return self::ListTicket($currentuser['userid']);
     } 
 	
-	 static function doSend()
+	static function doSendTicket()
     {
         global $controller;
         runtime_csfr::Protect();
         $formvars = $controller->GetAllControllerRequests('FORM');
-        return self::ExectuteSend($formvars['inPackage'], $formvars['inSubject'], $formvars['inMessage']);
-    }
+        if (self::ExectuteSendTicket($formvars['inDomain'], $formvars['inSubject'], $formvars['inMessage']));
+	}
 	
 	static function getResult()
     {
 		 if (self::$ok) {
-            return ui_sysmessage::shout(ui_language::translate("Your mail has been sent"), "zannounceok");
+            return ui_sysmessage::shout(ui_language::translate("Your ticket has been created. We will look at it as soon as possible"), "zannounceok");
         }
         return;
     }
@@ -186,3 +216,4 @@ class module_controller extends ctrl_module
      * Webinterface sudo methods.
      */
 }
+?>
