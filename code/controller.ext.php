@@ -4,6 +4,7 @@ class module_controller extends ctrl_module
 {
 
 		static $ok;
+		static $update;
 		
     /**
      * The 'worker' methods.
@@ -50,6 +51,63 @@ class module_controller extends ctrl_module
         $sql->execute();
         self::$ok = true;
 		return true;
+	}
+	static function ExectuteTicketUpdate($msg, $ticketid)
+	{
+		global $zdbh;
+		global $controller;
+		$currentuser = ctrl_users::GetUserDetail();
+		$date = date("Y-m-d - H:i:s");
+		
+		$sql_old= "SELECT * FROM x_ticket WHERE st_number = :number AND st_acc = :uid";
+		$sql_old = $zdbh->prepare($sql_old);
+            $sql_old->bindParam(':uid', $currentuser['userid']);
+			$sql_old->bindParam(':number', $ticketid);
+            $sql_old->execute();
+            while ($row_old = $sql_old->fetch()) {
+				$oldmsg = $row_old["st_meassge"];
+			}
+		
+		$msg = "$oldmsg \n\n $date -- $msg \n\n ---------------------------------- \n\n";
+		
+		$sql = $zdbh->prepare("UPDATE x_ticket SET st_meassge = :msg WHERE st_number = :number AND st_acc = :uid");
+		$sql->bindParam(':uid', $currentuser['userid']);
+		$sql->bindParam(':number', $ticketid);
+		$sql->bindParam(':msg', $msg);
+        $sql->execute();
+		
+		$sql_user = "SELECT * FROM x_ticket WHERE st_accpid = :uid AND st_number = :number";
+		$sql_user = $zdbh->prepare($sql_user);
+            $sql_user->bindParam(':uid', $currentuser['userid']);
+			$sql_user->bindParam(':number', $ticketid);
+            $sql_user->execute();
+            while ($row_user = $sql_user->fetch()) {
+				$userid = $row_user["st_groupid"];
+			}
+			
+			$sql_user1 = "SELECT * FROM x_accounts WHERE ac_id_pk = :uid";
+		$sql_user1 = $zdbh->prepare($sql_user1);
+            $sql_user1->bindParam(':uid', $userid);
+			$sql_user1->bindParam(':number', $ticketid);
+            $sql_user1->execute();
+            while ($row1 = $sql_user1->fetch()) {
+				$mail = $row1["ac_email_vc"];
+				$name = $row1["ac_user_vc"];
+			}
+		
+		    $email = $mail;
+			$emailsubject = "$ticketid -- The ticket has been updatet ";
+            $emailbody = "Hi $name\n\n $msg";
+		
+
+            $phpmailer = new sys_email();
+            $phpmailer->Subject = $emailsubject;
+            $phpmailer->Body = $emailbody;
+            $phpmailer->AddAddress($email);
+            $phpmailer->SendEmail();
+			
+			self::$update = true;
+			return true;
 	}
 	
 	static function doselect()
@@ -208,13 +266,16 @@ class module_controller extends ctrl_module
         global $controller;
         runtime_csfr::Protect();
         $formvars = $controller->GetAllControllerRequests('FORM');
-        if (self::ExectuteTicketUpdate($formvars['inMessage']));
+        if (self::ExectuteTicketUpdate($formvars['inMessage'], $formvars['innumber']));
 	}
 	
 	static function getResult()
     {
 		 if (self::$ok) {
             return ui_sysmessage::shout(ui_language::translate("Your ticket has been created. We will look at it as soon as possible"), "zannounceok");
+        }
+		if (self::$update) {
+            return ui_sysmessage::shout(ui_language::translate("You ticket has been update"), "zannounceok");
         }
         return;
     }
