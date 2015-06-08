@@ -15,7 +15,6 @@ class module_controller extends ctrl_module
         runtime_csfr::Protect();
 		$currentuser = ctrl_users::GetUserDetail();
         $formvars = $controller->GetAllControllerRequests('FORM');
-        //return self::ExectuteRead($formvars['innumber']);
 		if (isset($formvars['inRead'])) {
                 header("location: ./?module=" . $controller->GetCurrentModule() . '&show=read&ticket='. $formvars['innumber']. '');
                 exit;
@@ -202,6 +201,14 @@ class module_controller extends ctrl_module
         runtime_csfr::Protect();
         $formvars = $controller->GetAllControllerRequests('FORM');
         if (self::ExectuteSendTicket($formvars['inDomain'], $formvars['inSubject'], $formvars['inMessage']));
+	}
+	
+	static function doUpdateTicket()
+    {
+        global $controller;
+        runtime_csfr::Protect();
+        $formvars = $controller->GetAllControllerRequests('FORM');
+        if (self::ExectuteTicketUpdate($formvars['inMessage']));
 	}
 	
 	static function getResult()

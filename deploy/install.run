@@ -1,0 +1,40 @@
+<?php
+/**
+ *
+ * Installer for Simple ticket Module for sentora 1.0.0
+ * Version : 100
+ */
+ 
+require_once('cnf/db.php');
+require_once('dryden/db/driver.class.php');
+require_once('dryden/debug/logger.class.php');
+require_once('dryden/runtime/dataobject.class.php');
+require_once('dryden/sys/versions.class.php');
+require_once('dryden/ctrl/options.class.php');
+require_once('dryden/ctrl/auth.class.php');
+require_once('dryden/ctrl/users.class.php');
+require_once('dryden/fs/director.class.php');
+require_once('inc/dbc.inc.php');
+
+//install
+installModule();
+
+function installModule(){
+
+			global $zdbh;
+			global $controller;
+			
+			$sql = $zdbh->prepare("CREATE TABLE IF NOT EXISTS sentora_core.x_ticket (
+                                      `st_id` int(11) NOT NULL AUTO_INCREMENT,
+                                      `st_acc` int(11) NULL,
+                                      `st_number` varchar(40) NULL,
+									  `st_domain` varchar(50) NULL,
+									  `st_subject` varchar(150) NULL,
+									  `st_meassge` text NULL,
+									  `st_status` varchar(10) NULL,
+									  `st_ticketanswers` text NULL,
+									  `st_groupid int(11) NULL
+                                      PRIMARY KEY (`st_id`)
+                                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+     		$sql->execute();
+?>

@@ -46,7 +46,7 @@
 		<% endif %>
 		
 		<% if isread %>
-		<form action="./?module=Simple_ticket&action=send" method="post">
+		<form action="./?module=Simple_ticket&action=UpdateTicket" method="post">
             <table class="table table-striped">
 			<% loop Ticket %>
 			<tr>
@@ -66,11 +66,16 @@
 					<td><& Ticket_subject &></td>
                 <tr>
                     <th><: Your message :>:</th>
-                    <td><& Ticket_msg &></td>
+                    <td><textarea name="inMessage" id="inMessage" rows="3" cols="80" /><& Ticket_msg &></textarea></td>
                 </tr>
 				<tr>
                     <th><: Answers :>:</th>
                     <td><& Ticket_answers &></td>
+                </tr>
+				<tr>
+                    <th colspan="2" align="right">
+                        <button class="button-loader add-row btn btn-primary" type="submit" name="inSave" id="button"><: Make ticket :></button>
+                    </th>
                 </tr>
 				<% endif %>
             </table>
