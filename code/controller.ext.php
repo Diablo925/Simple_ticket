@@ -39,7 +39,9 @@ class module_controller extends ctrl_module
 		$sql = $zdbh->prepare($sql);
         $sql->bindParam(':uid', $currentuser['userid']);
 		$sql->execute();
-        while ($row = $sql->fetch()) { $reseller = $row["ac_reseller_fk"]; }
+        while ($row = $sql->fetch()) { $reseller = $row["ac_reseller_fk"];
+		$email = $row["ac_email_vc"]; 
+		}
 		$sql = $zdbh->prepare("INSERT INTO x_ticket (st_acc, st_number, st_domain, st_subject, st_meassge, st_status, st_groupid) VALUES (:uid, :number, :domain, :subject, :msg, :ticketstatus, :group)");
 		$sql->bindParam(':uid', $currentuser['userid']);
 		$sql->bindParam(':number', $ticketid);
@@ -49,6 +51,15 @@ class module_controller extends ctrl_module
 		$sql->bindParam(':ticketstatus', $Ticketstatus);
 		$sql->bindParam(':group', $reseller);
         $sql->execute();
+			
+			$emailsubject = "A new ticket has been created (".$ticketid.")";
+			$emailbody = "Subject is : ".$subject."\nAbout domain : ".$domain."\nMessage :\n".$msg."";
+			$phpmailer = new sys_email();
+            $phpmailer->Subject = $emailsubject;
+            $phpmailer->Body = $emailbody;
+            $phpmailer->AddAddress($email);
+            $phpmailer->SendEmail();
+		
         self::$ok = true;
 		return true;
 	}
@@ -59,16 +70,16 @@ class module_controller extends ctrl_module
 		$currentuser = ctrl_users::GetUserDetail();
 		$date = date("Y-m-d - H:i:s");
 		
-		$sql_old= "SELECT * FROM x_ticket WHERE st_number = :number AND st_acc = :uid";
+		$sql_old = "SELECT * FROM x_ticket WHERE st_number = :number AND st_acc = :uid";
 		$sql_old = $zdbh->prepare($sql_old);
             $sql_old->bindParam(':uid', $currentuser['userid']);
 			$sql_old->bindParam(':number', $ticketid);
             $sql_old->execute();
             while ($row_old = $sql_old->fetch()) {
 				$oldmsg = $row_old["st_meassge"];
+				$status = $row_old["st_status"];
 			}
-		
-		
+			
 		$msg = "$oldmsg
 		--------------------------------
 		$date -- $msg";
@@ -76,7 +87,10 @@ class module_controller extends ctrl_module
 		$sql = $zdbh->prepare("UPDATE x_ticket SET st_meassge = :msg, st_status = :status WHERE st_number = :number AND st_acc = :uid");
 		$sql->bindParam(':uid', $currentuser['userid']);
 		$sql->bindParam(':number', $ticketid);
-		$Ticketstatus = "Re-Open";
+		if($status == "Close") { $Ticketstatus = "Re-Open"; }
+		if($status == "Re-Open") { $Ticketstatus = "Re-Open"; }
+		if($status == "Pending") { $Ticketstatus = "Pending"; }
+		if($status == "Open") { $Ticketstatus = "Open"; } 
 		$sql->bindParam(':status', $Ticketstatus);
 		$sql->bindParam(':msg', $msg);
         $sql->execute();
@@ -103,11 +117,32 @@ class module_controller extends ctrl_module
         return true;
     }
 	
+	static function dosearch()
+    {
+        global $controller;
+        runtime_csfr::Protect();
+        $currentuser = ctrl_users::GetUserDetail();
+        $formvars = $controller->GetAllControllerRequests('FORM');
+		
+            if (isset($formvars['inSearchButton'])) {
+                header("location: ./?module=" . $controller->GetCurrentModule() . '&show=Search&search='.$formvars['insearch'].'');
+                exit;
+            }
+        return true;
+    }
+	
 	static function getisMyTicket()
     {
         global $controller;
         $urlvars = $controller->GetAllControllerRequests('URL');
         return (isset($urlvars['show'])) && ($urlvars['show'] == "MyTicket");
+    }
+	
+	static function getisSearch()
+    {
+        global $controller;
+        $urlvars = $controller->GetAllControllerRequests('URL');
+        return (isset($urlvars['show'])) && ($urlvars['show'] == "Search");
     }
 	
 	static function getisread()
@@ -183,13 +218,39 @@ class module_controller extends ctrl_module
 		global $zdbh;
 		global $controller;
 		$currentuser = ctrl_users::GetUserDetail();
-		$sql = "SELECT * FROM x_ticket WHERE st_acc = :uid";
+		$sql = "SELECT * FROM x_ticket WHERE st_acc = :uid ORDER BY st_number LIMIT 30";
         $numrows = $zdbh->prepare($sql);
         $numrows->bindParam(':uid', $currentuser['userid']);
         $numrows->execute();
         if ($numrows->fetchColumn() <> 0) {
 		$sql = $zdbh->prepare($sql);
             $sql->bindParam(':uid', $currentuser['userid']);
+            $res = array();
+            $sql->execute();
+            while ($row = $sql->fetch()) {
+                array_push($res, array('ticketid' => $row['st_id'], 'ticketnumber' => $row['st_number'], 'ticketdomain' => $row['st_domain'], 'ticketsubject' => $row['st_subject'], 'ticketstatus' => $row['st_status']));
+            }
+            return $res;
+        } else {
+            return false;
+        }
+	} 
+	
+	static function ListTicketSearch($uid, $ticket)
+    {
+		global $zdbh;
+		global $controller;
+		$currentuser = ctrl_users::GetUserDetail();
+		$ticket = "$ticket%";
+		$sql = "SELECT * FROM x_ticket WHERE st_number LIKE :ticket AND st_acc = :uid";
+        $numrows = $zdbh->prepare($sql);
+        $numrows->bindParam(':uid', $currentuser['userid']);
+		$numrows->bindParam(':ticket', $ticket);
+        $numrows->execute();
+        if ($numrows->fetchColumn() <> 0) {
+		$sql = $zdbh->prepare($sql);
+            $sql->bindParam(':uid', $currentuser['userid']);
+			$sql->bindParam(':ticket', $ticket);
             $res = array();
             $sql->execute();
             while ($row = $sql->fetch()) {
@@ -229,6 +290,14 @@ class module_controller extends ctrl_module
         $currentuser = ctrl_users::GetUserDetail();
         return self::ListTicket($currentuser['userid']);
     } 
+	
+	static function getTicketListSearch()
+    {
+        global $controller;
+        $currentuser = ctrl_users::GetUserDetail();
+		$urlvars = $controller->GetAllControllerRequests('URL');
+        return self::ListTicketSearch($currentuser['userid'], $urlvars['search']);
+    }
 	
 	static function doSendTicket()
     {

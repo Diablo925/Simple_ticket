@@ -11,18 +11,43 @@
     </div>
 	
 	<@ Result @>
-
-	<form action="./?module=Simple_ticket&action=select" method="post">
+	
+	<: Search in you ticket Wildcard allow :>
+	<table class="table">
+	<tr><td><form action="./?module=Simple_ticket&action=select" method="post">
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inMyTicket" id="inMyTicket" value="inMyTicket"><: My Ticket :></button>
 	<button class="button-loader btn btn-primary" type="submit" id="button" name="inNewTicket" id="inNewTicket" value="inNewTicket"><: New ticket :></button>
 	<@ CSFR_Tag @>
-	</form>
+	</form></td><td><form action="./?module=Simple_ticket&action=search" method="post"><input type="text" name="insearch" data-provide="typeahead" placeholder="Search" autocomplete="off"></td><td><button type="submit" class="btn-primary btn glyphicon glyphicon-search" aria-hidden="true" name="inSearchButton"></button><@ CSFR_Tag @>
+	</form></td></tr>
+	</table>
 	
     <div class="zform_wrapper">
         <h2><: Simple ticket :></h2>
-		
-		<% if isMyTicket %>
+		<% if isSearch %>
 		<form action="./?module=Simple_ticket&action=read" method="post">
+		<table class="table table-striped">
+		<tr>
+		<th><: Ticket number :></th>
+		<th><: Subject :></th>
+		<th><: Domain :></th>
+		<th><: Status :></th>
+		<th> </th>
+		</tr>
+		<% loop TicketListSearch %>
+		<tr>
+		<td><& ticketnumber &></td>
+		<td><& ticketsubject &></td>
+		<td><& ticketdomain &></td>
+		<td><& ticketstatus &></td>
+		<td><input type="hidden" value="<& ticketnumber &>" name="innumber"><button class="button-loader btn btn-primary" type="submit" name="inRead" id="inRead" value="inRead"><: Read :></button></td>
+		</tr>
+		<% endloop %>
+		</table>
+			<@ CSFR_Tag @>
+		</form>
+		<% endif %>
+		<% if isMyTicket %>
 		<table class="table table-striped">
 		<tr>
 		<th><: Ticket number :></th>
@@ -37,12 +62,11 @@
 		<td><& ticketsubject &></td>
 		<td><& ticketdomain &></td>
 		<td><& ticketstatus &></td>
-		<td><input type="hidden" value="<& ticketnumber &>" name="innumber"><button class="button-loader btn btn-primary" type="submit" name="inRead" id="inRead" value="inRead"><: Read :></button></td>
+		<td><form action="./?module=Simple_ticket&action=read" method="post">
+		<input type="hidden" value="<& ticketnumber &>" name="innumber"><button class="button-loader btn btn-primary" type="submit" name="inRead" id="inRead" value="inRead"><: Read :></button><@ CSFR_Tag @></form></td>
 		</tr>
 		<% endloop %>
 		</table>
-			<@ CSFR_Tag @>
-		</form>
 		<% endif %>
 		
 		<% if isread %>
@@ -118,7 +142,6 @@
 				<@ CSFR_Tag @>
         </form>
 		<% endif %>
-		
     </div>
 
 </div>
