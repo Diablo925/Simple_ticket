@@ -25,9 +25,7 @@ function removeModule(){
 		global $zdbh;
 		global $controller;
 		
-		$numrows = $zdbh->prepare("DROP TABLE `x_ticket`;");
+		$numrows = $zdbh->prepare("DROP TABLE sentora_core.x_ticket");
     		$numrows->execute();
-	}
-    		
  }
 ?>

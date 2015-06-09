@@ -2,8 +2,8 @@
 <module>
     <name>Simple ticket</name>
     <version>100</version>
-    <defaultcat>Reseller</defaultcat>
-    <desc>Simple ticket system to sentora</desc>
+    <defaultcat>Account information</defaultcat>
+    <desc>Simple ticket system</desc>
     <authorname>Diablo925</authorname>
     <authoremail>Carsten@alio.dk</authoremail>
     <authorurl>http://alio.dk/</authorurl>
