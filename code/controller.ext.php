@@ -68,43 +68,18 @@ class module_controller extends ctrl_module
 				$oldmsg = $row_old["st_meassge"];
 			}
 		
-		$msg = "$oldmsg \n\n $date -- $msg \n\n ---------------------------------- \n\n";
 		
-		$sql = $zdbh->prepare("UPDATE x_ticket SET st_meassge = :msg WHERE st_number = :number AND st_acc = :uid");
+		$msg = "$oldmsg
+		--------------------------------
+		$date -- $msg";
+		
+		$sql = $zdbh->prepare("UPDATE x_ticket SET st_meassge = :msg, st_status = :status WHERE st_number = :number AND st_acc = :uid");
 		$sql->bindParam(':uid', $currentuser['userid']);
 		$sql->bindParam(':number', $ticketid);
+		$Ticketstatus = "Re-Open";
+		$sql->bindParam(':status', $Ticketstatus);
 		$sql->bindParam(':msg', $msg);
         $sql->execute();
-		
-		$sql_user = "SELECT * FROM x_ticket WHERE st_accpid = :uid AND st_number = :number";
-		$sql_user = $zdbh->prepare($sql_user);
-            $sql_user->bindParam(':uid', $currentuser['userid']);
-			$sql_user->bindParam(':number', $ticketid);
-            $sql_user->execute();
-            while ($row_user = $sql_user->fetch()) {
-				$userid = $row_user["st_groupid"];
-			}
-			
-			$sql_user1 = "SELECT * FROM x_accounts WHERE ac_id_pk = :uid";
-		$sql_user1 = $zdbh->prepare($sql_user1);
-            $sql_user1->bindParam(':uid', $userid);
-			$sql_user1->bindParam(':number', $ticketid);
-            $sql_user1->execute();
-            while ($row1 = $sql_user1->fetch()) {
-				$mail = $row1["ac_email_vc"];
-				$name = $row1["ac_user_vc"];
-			}
-		
-		    $email = $mail;
-			$emailsubject = "$ticketid -- The ticket has been updatet ";
-            $emailbody = "Hi $name\n\n $msg";
-		
-
-            $phpmailer = new sys_email();
-            $phpmailer->Subject = $emailsubject;
-            $phpmailer->Body = $emailbody;
-            $phpmailer->AddAddress($email);
-            $phpmailer->SendEmail();
 			
 			self::$update = true;
 			return true;
@@ -168,8 +143,9 @@ class module_controller extends ctrl_module
             $res = array();
             $sql->execute();
             while ($row = $sql->fetch()) {
+				$msg = nl2br($row['st_meassge']);
                 array_push($res, array('Ticket_number' => $row['st_number'], 'Ticket_domain' => $row['st_domain'],
-										'Ticket_subject' => $row['st_subject'], 'Ticket_msg' => $row['st_meassge'], 'Ticket_answers' => $row['st_ticketanswers']));
+										'Ticket_subject' => $row['st_subject'], 'Ticket_msg' => $msg, 'Ticket_answers' => $row['st_ticketanswers']));
             }
             return $res;
         } else {
